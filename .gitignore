@@ -13,6 +13,9 @@ data/
 *.sqlite
 *.db
 
+# test results
+rag-pipeline/test/test_result
+
 # Next.js / Node
 voice-client/node_modules/
 voice-client/.next/

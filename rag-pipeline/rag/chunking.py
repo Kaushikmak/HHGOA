@@ -9,7 +9,7 @@ class IndicRAGChunker:
     # Devanagari & Bengali (hi, mr, ne, sa, as, bn)
     BRAHMIC_REGEX = "[^,।॥?!]+[,।॥?!]?"
     # Urdu (ur)
-    URDU_REGEX = "[^,۔؟!]+[,۔؟!]?"
+    URDU_REGEX = "[^،؛,۔؟!]+[،؛,۔؟!]?"
     # Latin conventions (en, ta, te, kn, ml, gu, pa)
     LATIN_REGEX = "[^,.;?!]+[,.;?!]?"
 

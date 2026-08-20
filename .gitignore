@@ -1,1 +1,31 @@
+# Environments
 .env
+.venv
+venv/
+__pycache__/
+*.pyc
+
+# Data & Models
+data/
+*.parquet
+*.csv
+*.json
+*.sqlite
+*.db
+
+# Next.js / Node
+voice-client/node_modules/
+voice-client/.next/
+voice-client/out/
+voice-client/build/
+voice-client/.pnp.*
+voice-client/.yarn/*
+!voice-client/.yarn/patches
+!voice-client/.yarn/plugins
+!voice-client/.yarn/releases
+!voice-client/.yarn/sdks
+!voice-client/.yarn/versions
+
+# OS Files
+.DS_Store
+Thumbs.db

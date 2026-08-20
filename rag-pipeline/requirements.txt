@@ -1,0 +1,21 @@
+# RAG Pipeline & Chunking
+langchain-core
+langchain-text-splitters
+datasets
+pyarrow
+
+# Vector DB
+qdrant-client
+sentence-transformers
+
+# API Backend
+fastapi
+uvicorn
+python-multipart
+
+# Audio / Transcription / Generation
+requests
+sarvamai
+google-genai
+python-dotenv
+llama-index-core

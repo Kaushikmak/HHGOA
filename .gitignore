@@ -16,6 +16,9 @@ data/
 # test results
 rag-pipeline/test/test_result
 
+# qdrant db
+/rag-pipeline/qdrant_db
+
 # Next.js / Node
 voice-client/node_modules/
 voice-client/.next/

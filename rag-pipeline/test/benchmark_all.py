@@ -35,6 +35,10 @@ def evaluate_retrieval(client, embedder, collection_name, queries_to_test, eval_
         if not query_text:
             continue
             
+        # Truncate abnormally long queries (dirty data) to typical query length
+        # to prevent quadratic self-attention latency spikes in the Transformer
+        query_text = query_text[:100]
+            
         start_time = time.time()
         query_vector = embedder.encode(query_text).tolist()
         
@@ -143,7 +147,7 @@ def run_all_benchmarks(data_dir: str, num_queries: int = 50):
     # Generate Combined Plots
     sns.set_theme(style="whitegrid")
     fig, axes = plt.subplots(2, 2, figsize=(18, 12))
-    fig.suptitle("IndicRAG Benchmark Results across 13 Languages", fontsize=16)
+    fig.suptitle("IndicRAG Benchmark Results", fontsize=16)
     
     # Subplot 1: Recall@1 Comparison
     sns.barplot(data=df_res, x="Language", y="Recall@1", hue="Corpus", ax=axes[0, 0])

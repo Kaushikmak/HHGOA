@@ -105,7 +105,11 @@ def run_all_benchmarks(data_dir: str, num_queries: int = 50):
                 lang_code: row.get("query", "")
             }
 
+        chunk_start = time.time()
+        avg_chunk_latency = 0
         for batch_nodes in stream_and_chunk_parquet(file_path, lang_code=lang_code, batch_size=num_queries):
+            chunk_time = (time.time() - chunk_start) * 1000
+            avg_chunk_latency = round(chunk_time / num_queries, 2)
             texts = [node.text for node in batch_nodes]
             embeddings = embedder.encode(texts, show_progress_bar=False)
             
@@ -127,6 +131,7 @@ def run_all_benchmarks(data_dir: str, num_queries: int = 50):
         if tgt_metrics:
             tgt_metrics["Language"] = lang_code.upper()
             tgt_metrics["Corpus"] = "Target"
+            tgt_metrics["Avg_Chunking_Latency"] = avg_chunk_latency
             results_list.append(tgt_metrics)
             
         # Evaluate English
@@ -134,6 +139,7 @@ def run_all_benchmarks(data_dir: str, num_queries: int = 50):
         if en_metrics:
             en_metrics["Language"] = lang_code.upper()
             en_metrics["Corpus"] = "English"
+            en_metrics["Avg_Chunking_Latency"] = avg_chunk_latency
             results_list.append(en_metrics)
             
     # Compile Results
@@ -144,9 +150,9 @@ def run_all_benchmarks(data_dir: str, num_queries: int = 50):
     df_res.to_csv(os.path.join(output_dir, "benchmark_results.csv"), index=False)
     print(f"\nBenchmarking complete. Results saved to {output_dir}/benchmark_results.csv")
     
-    # Generate Combined Plots
+    # Generate Combined Plots (3x2 grid)
     sns.set_theme(style="whitegrid")
-    fig, axes = plt.subplots(2, 2, figsize=(18, 12))
+    fig, axes = plt.subplots(3, 2, figsize=(18, 18))
     fig.suptitle("IndicRAG Benchmark Results", fontsize=16)
     
     # Subplot 1: Recall@1 Comparison
@@ -168,6 +174,14 @@ def run_all_benchmarks(data_dir: str, num_queries: int = 50):
     sns.barplot(data=df_res[df_res["Corpus"] == "Target"], x="Language", y="P99", hue="Language", palette="viridis", legend=False, ax=axes[1, 1])
     axes[1, 1].set_title("P99 Vector Search Latency (ms)")
     axes[1, 1].set_ylabel("Latency (ms)")
+    
+    # Subplot 5: Chunking Latency (Target Languages Only)
+    sns.barplot(data=df_res[df_res["Corpus"] == "Target"], x="Language", y="Avg_Chunking_Latency", hue="Language", palette="magma", legend=False, ax=axes[2, 0])
+    axes[2, 0].set_title("Avg Chunking Latency per Row (ms)")
+    axes[2, 0].set_ylabel("Latency (ms)")
+    
+    # Hide empty 6th subplot
+    axes[2, 1].axis('off')
     
     plt.tight_layout()
     plt.savefig(os.path.join(output_dir, "combined_benchmark_results.png"), dpi=300, bbox_inches='tight')

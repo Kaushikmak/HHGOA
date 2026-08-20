@@ -104,6 +104,23 @@ class IndicRAGChunker:
                     
         return nodes
 
+    def process_batch(self, records: List[Dict[str, Any]]) -> List[LlamaDocument]:
+        """
+        Processes a batch of records. Uses multi-threading for Kannada (kn).
+        """
+        batch_nodes = []
+        if self.lang_code == "kn":
+            import concurrent.futures
+            with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
+                results = list(executor.map(self.process_record, records))
+                for nodes in results:
+                    batch_nodes.extend(nodes)
+        else:
+            for record in records:
+                nodes = self.process_record(record)
+                batch_nodes.extend(nodes)
+        return batch_nodes
+
 def stream_and_chunk_parquet(file_path: str, lang_code: str, chunk_size_limit: int = 2000, batch_size: int = 100) -> Generator[List[LlamaDocument], None, None]:
     if not os.path.exists(file_path):
         raise FileNotFoundError(f"Dataset file not found: {file_path}")
@@ -113,14 +130,8 @@ def stream_and_chunk_parquet(file_path: str, lang_code: str, chunk_size_limit: i
     
     for batch in pf.iter_batches(batch_size=batch_size):
         df = batch.to_pandas()
-        batch_nodes = []
-        
-        for _, row in df.iterrows():
-            record = row.to_dict()
-            nodes = chunker.process_record(record)
-            batch_nodes.extend(nodes)
-            
-        yield batch_nodes
+        records = [row.to_dict() for _, row in df.iterrows()]
+        yield chunker.process_batch(records)
 
 if __name__ == "__main__":
     test_file = "data/train/hintrain.parquet"

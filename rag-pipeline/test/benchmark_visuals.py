@@ -16,10 +16,10 @@ from api.main import app
 def run_benchmarks():
     print("Running comprehensive benchmarks...")
     
-    # 1. Benchmark Chunking
-    print("Benchmarking Chunking...")
-    chunker = IndicRAGChunker(lang_code="hi", chunk_size_limit=200)
-    record = {
+    # 1. Benchmark Chunking (Hindi - Single Threaded Baseline)
+    print("Benchmarking Chunking (HI)...")
+    chunker_hi = IndicRAGChunker(lang_code="hi", chunk_size_limit=200)
+    record_hi = {
         "query_id": "1",
         "passages": {
             "is_selected": [1],
@@ -27,11 +27,32 @@ def run_benchmarks():
             "Translated_passages": ["तेज़ भूरी लोमड़ी आलसी कुत्ते के ऊपर से कूद जाती है।"]
         }
     }
-    chunking_latencies = []
-    for _ in range(50):
+    chunking_latencies_hi = []
+    # Test batch of 50
+    batch_hi = [record_hi for _ in range(50)]
+    for _ in range(10):  # 10 batch runs
         start = time.time()
-        chunker.process_record(record)
-        chunking_latencies.append((time.time() - start) * 1000)
+        chunker_hi.process_batch(batch_hi)
+        # Average per record
+        chunking_latencies_hi.append(((time.time() - start) * 1000) / 50)
+        
+    # 1.5 Benchmark Chunking (Kannada - Multi-Threaded)
+    print("Benchmarking Chunking (KN - Threaded)...")
+    chunker_kn = IndicRAGChunker(lang_code="kn", chunk_size_limit=200)
+    record_kn = {
+        "query_id": "2",
+        "passages": {
+            "is_selected": [1],
+            "English_passages": ["The quick brown fox jumps over the lazy dog."],
+            "Translated_passages": ["ಕಂದು ಬಣ್ಣದ ನರಿ ಸೋಮಾರಿ ನಾಯಿಯ ಮೇಲೆ ಜಿಗಿಯುತ್ತದೆ."]
+        }
+    }
+    chunking_latencies_kn = []
+    batch_kn = [record_kn for _ in range(50)]
+    for _ in range(10):
+        start = time.time()
+        chunker_kn.process_batch(batch_kn)
+        chunking_latencies_kn.append(((time.time() - start) * 1000) / 50)
         
     # 2. Benchmark Retrieval
     print("Benchmarking Retrieval...")
@@ -53,8 +74,10 @@ def run_benchmarks():
 
     # Prepare Data
     data = []
-    for l in chunking_latencies:
-        data.append({"Component": "Chunking", "Latency (ms)": l})
+    for l in chunking_latencies_hi:
+        data.append({"Component": "Chunking (HI)", "Latency (ms)": l})
+    for l in chunking_latencies_kn:
+        data.append({"Component": "Chunking (KN)", "Latency (ms)": l})
     for l in retrieval_latencies:
         data.append({"Component": "Retrieval", "Latency (ms)": l})
     for l in generation_latencies:
@@ -87,7 +110,7 @@ def run_benchmarks():
     
     # 2. P50/P70/P100 Bar Plot
     stats = []
-    for comp in ["Chunking", "Retrieval", "LLM Generation"]:
+    for comp in ["Chunking (HI)", "Chunking (KN)", "Retrieval", "LLM Generation"]:
         comp_data = df[df["Component"] == comp]["Latency (ms)"]
         stats.append({
             "Component": comp,

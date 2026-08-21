@@ -138,7 +138,7 @@ def run_all_benchmarks(data_dir: str, num_queries: int = 50):
             
     # Compile Results
     df_res = pd.DataFrame(results_list)
-    output_dir = "rag-pipeline/test/test_result"
+    output_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "test_result")
     os.makedirs(output_dir, exist_ok=True)
     
     df_res.to_csv(os.path.join(output_dir, "benchmark_results.csv"), index=False)
@@ -174,4 +174,6 @@ def run_all_benchmarks(data_dir: str, num_queries: int = 50):
     print(f"Combined benchmark plots saved to {output_dir}/combined_benchmark_results.png")
 
 if __name__ == "__main__":
-    run_all_benchmarks("data/train/", num_queries=50)
+    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    data_dir = os.path.join(base_dir, "data", "train")
+    run_all_benchmarks(data_dir, num_queries=50)
